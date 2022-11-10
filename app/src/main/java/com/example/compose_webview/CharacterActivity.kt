@@ -2,6 +2,7 @@ package com.example.compose_webview
 
 import android.annotation.SuppressLint
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.viewModels
@@ -32,21 +33,22 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.compose_webview.ui.theme.ComposeWebviewTheme
+import com.example.compose_webview.viewmodel.CharacterUIState
 import com.example.compose_webview.viewmodel.CharacterViewModel
-import com.google.android.material.progressindicator.CircularProgressIndicator
 
 class CharacterActivity : ComponentActivity(){
+    val viewModel: CharacterViewModel by viewModels()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContent {
-            val viewModel: CharacterViewModel by viewModels()
-            LaunchedEffect(key1 = Unit, block = {
-                viewModel.fetchCharacterList()
-            })
             ComposeWebviewTheme{
                 Surface(modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background) {
-                    ToolBar(viewModel)
+                    Content(viewModel.itemList.value)
+
+                    LaunchedEffect(key1 = Unit, block = {
+                        viewModel.fetchCharacterList()
+                    })
                 }
             }
         }
@@ -54,12 +56,13 @@ class CharacterActivity : ComponentActivity(){
 
     @OptIn(ExperimentalMaterial3Api::class)
     @Composable
-    fun ToolBar(viewModel: CharacterViewModel) {
+    fun Content(state: CharacterUIState) {
+
 
         Scaffold(topBar = {
             SmallTopAppBar(
                 title = {
-                    Text(text = "Mymail")
+                    Text(text = "Character")
                 },
                 Modifier.background(MaterialTheme.colorScheme.background),
                 navigationIcon = {
@@ -69,7 +72,8 @@ class CharacterActivity : ComponentActivity(){
                 }
             )
         }, content = {
-            CharacterList(viewModel)
+
+            CharacterList(state)
         }, floatingActionButton = {
             Fab()
         })
@@ -77,18 +81,17 @@ class CharacterActivity : ComponentActivity(){
 
      @SuppressLint("StateFlowValueCalledInComposition")
      @Composable
-    fun CharacterList(viewModel: CharacterViewModel) {
-         val state = viewModel.state.value
+    fun CharacterList(state: CharacterUIState) {
          LazyColumn{
-             items(state.characterList){ characterDataModel ->
+             items(state.characterList){item->
                  Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center){
-                     state.let { uiState ->
+                     item.let { uiState ->
                          Column(verticalArrangement = Arrangement.Top) {
                              Box(modifier = Modifier.fillMaxSize()){
                                  Column(verticalArrangement = Arrangement.Top) {
-                                     Text(text =characterDataModel.name)
-                                     Text(text =characterDataModel.name)
-                                     Text(text =characterDataModel.name)
+                                     Text(text =uiState.name)
+                                     Text(text =uiState.name)
+                                     Text(text =uiState.name)
                                  }
                              }
                          }
@@ -96,9 +99,11 @@ class CharacterActivity : ComponentActivity(){
                      }
                  }
              }
+
          }
     // if there is an error loading the report
          if (state.hasError) {
+             Toast.makeText(LocalContext.current, "ERRRR...", Toast.LENGTH_SHORT).show()
              Text(
                  text = state.errorMessage ?: "Something went wrong",
                  style = TextStyle(
@@ -110,7 +115,7 @@ class CharacterActivity : ComponentActivity(){
          }
 
          if (state.isLoading) {
-           //  CircularProgressIndicator( LocalContext.current)
+             Toast.makeText(LocalContext.current, "Loading...", Toast.LENGTH_SHORT).show()
          }
     }
 }
